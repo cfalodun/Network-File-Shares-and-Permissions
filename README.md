@@ -1,18 +1,24 @@
 # <p align="center">Network File Shares & Permission Management
 
-## Objective
+## Project Summary
 
-Create shared folders with varying permission levels, test access as standard users, and implement security group-based access control within an Active Directory environment.
+This project demonstrates role-based access control through file share and NTFS permission configuration. Shared folders were created with varying access levels, and security groups were used to enforce controlled access to sensitive directories.
 
-This lab demonstrates:
+### Languages Used
+- N/A (GUI-based configuration)
 
-- Share-level permissions
-- Role-based access control
-- Security group configuration
-- Access validation from client machines
+### Environments Used
+- Microsoft Azure
+- Windows Server (Domain Controller)
+- Windows 10 (Client Machine)
 
+### Technologies / Services Used
+- Active Directory
+- NTFS Permissions
+- Windows File Services
+- Azure Virtual Machines
 ---
-
+# Demonstration
 # Part 1 – Create Shared Folders with Permissions
 
 Logged into **DC-1** as:
