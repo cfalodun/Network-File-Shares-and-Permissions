@@ -1,48 +1,61 @@
-# <p align="center">Network File Shares & Permission Management
+# Network File Shares & Permission Management
 
 ## Project Summary
 
-This project demonstrates role-based access control through file share and NTFS permission configuration. Shared folders were created with varying access levels, and security groups were used to enforce controlled access to sensitive directories.
+This project demonstrates how file sharing and access control are managed in an Active Directory environment using both share permissions and NTFS permissions.
 
-### Languages Used
-- N/A (GUI-based configuration)
+Multiple shared folders were created with different access levels, and user access was tested from a client machine. A security group was then implemented to control access to a restricted folder, demonstrating role-based access control.
 
-### Environments Used
-- Microsoft Azure
-- Windows Server (Domain Controller)
-- Windows 10 (Client Machine)
+---
 
-### Technologies / Services Used
+## Environment & Tools
+
+### Environment
+- Microsoft Azure Virtual Machines
+- Windows Server (Domain Controller – DC-1)
+- Windows 10 (Client-1)
+
+### Technologies Used
 - Active Directory
 - NTFS Permissions
 - Windows File Services
-- Azure Virtual Machines
+
 ---
-# Demonstration
-# Part 1 – Create Shared Folders with Permissions
 
-Logged into **DC-1** as:
+## Demonstration
 
+# Part 1: Create Shared Folders
+
+## Step 1: Create Folder Structure
+
+Log into **DC-1** as:
+
+```
 mydomain.com\jane_admin
+```
 
-Created the following folders on C:\:
+On the C:\ drive, create the following folders:
 
-- read-access
-- write-access
-- no-access
-- accounting
+- `read-access`
+- `write-access`
+- `no-access`
+- `accounting`
 
 <img src="https://i.postimg.cc/qqfH3f6Y/01-dc1-folder-structure-created.png" width="500">
 
 ---
 
-## Configure Share Permissions
+## Step 2: Configure Share Permissions
+
+Right-click each folder → **Properties → Sharing → Advanced Sharing → Permissions**
+
+---
 
 ### Read-Only Access
 
-Folder: read-access  
-Group: Domain Users  
-Permission: Read
+Folder: `read-access`  
+Group: `Domain Users`  
+Permission: **Read**
 
 <img src="https://i.postimg.cc/L5dF1dgw/02-dc1-share-read-access.png" width="500">
 
@@ -50,117 +63,141 @@ Permission: Read
 
 ### Read/Write Access
 
-Folder: write-access  
-Group: Domain Users  
-Permission: Read/Write
+Folder: `write-access`  
+Group: `Domain Users`  
+Permission: **Read / Change**
 
 <img src="https://i.postimg.cc/j2VY7VnG/03-dc1-share-write-access.png" width="500">
 
 ---
 
-### No Access for Standard Users
+### Restricted Access
 
-Folder: no-access  
-Group: Domain Admins  
-Permission: Read/Write  
+Folder: `no-access`  
+Group: `Domain Admins`  
+Permission: **Read / Change**
 
-(Standard users do not have access.)
+(Standard users are not added, so they have no access.)
 
 <img src="https://i.postimg.cc/BbWfKWPR/04-dc1-share-no-access.png" width="500">
 
 ---
 
-# Part 2 – Test Access as Normal User
+## Step 3: Configure NTFS Permissions
 
-Logged into **Client-1** as:
+Right-click each folder → **Properties → Security**
 
-mydomain\<someuser>
+Ensure NTFS permissions align with share permissions:
 
-Accessed shared directory:
+- `read-access` → Read  
+- `write-access` → Modify  
+- `no-access` → Only accessible to admins  
 
-\\DC-1
-
-<img src="https://i.postimg.cc/j2VY7VJY/05-client1-access-test-normal-user.png" width="500">
-
-Tested read vs write capabilities.
-
-<img src="https://i.postimg.cc/0jg1wgJq/06-client1-read-vs-write-test.png" width="500">
-
-### Observations
-
-- read-access → Can open, cannot modify  
-- write-access → Can create and modify files  
-- no-access → Access denied  
-
-Behavior matched assigned permissions.
+> Both Share and NTFS permissions work together. The most restrictive permission always applies.
 
 ---
 
-# Part 3 – Implement Security Group-Based Access (ACCOUNTANTS)
+# Part 2: Test Access as a Standard User
 
-## Create Security Group
+## Step 1: Log in as a Normal User
 
-On DC-1:
+Log into **Client-1** as:
 
-Created security group:
+```
+mydomain\<someuser>
+```
 
-ACCOUNTANTS
+---
+
+## Step 2: Access Shared Folders
+
+Open File Explorer and navigate to:
+
+```
+\\DC-1
+```
+
+<img src="https://i.postimg.cc/j2VY7VJY/05-client1-access-test-normal-user.png" width="500">
+
+---
+
+## Step 3: Test Permissions
+
+Attempt to interact with each folder:
+
+<img src="https://i.postimg.cc/0jg1wgJq/06-client1-read-vs-write-test.png" width="500">
+
+### Expected Behavior
+
+- `read-access` → Files can be opened but not modified  
+- `write-access` → Files can be created and edited  
+- `no-access` → Access denied  
+
+This confirms that the configured permissions are working correctly.
+
+---
+
+# Part 3: Role-Based Access with Security Groups
+
+## Step 1: Create Security Group
+
+On **DC-1**, open **Active Directory Users and Computers**.
+
+Create a new group:
+
+- Name: `ACCOUNTANTS`
+- Type: Security
 
 <img src="https://i.postimg.cc/zvmYgmRr/07-ad-accountants-group-created.png" width="500">
 
 ---
 
-## Assign Folder Permissions
+## Step 2: Assign Folder Permissions
 
-Folder: accounting  
-Group: ACCOUNTANTS  
-Permission: Read/Write
+Configure access for the `accounting` folder.
+
+### Share Permissions:
+- Add `ACCOUNTANTS`
+- Grant **Read / Change**
+
+### NTFS Permissions:
+- Add `ACCOUNTANTS`
+- Grant **Modify**
 
 <img src="https://i.postimg.cc/kGrPbrtC/08-dc1-accounting-share-permissions.png" width="500">
 
 ---
 
-## Test Access Before Group Membership
+## Step 3: Test Access Before Group Membership
 
-On Client-1 as <someuser>:
+On **Client-1**, as a standard user:
 
-Attempted to access:
-
+```
 \\DC-1\accounting
+```
 
-Access denied (user not in ACCOUNTANTS group).
+Access is denied because the user is not part of the `ACCOUNTANTS` group.
 
 ---
 
-## Add User to Security Group
+## Step 4: Add User to Security Group
 
-On DC-1:
+On **DC-1**:
 
-Added <someuser> to ACCOUNTANTS group.
+- Add `<someuser>` to `ACCOUNTANTS`
 
-Logged out and back in on Client-1.
+Log out and back in on **Client-1** to refresh group membership.
 
-Accessed accounting share again.
+---
+
+## Step 5: Verify Access After Group Assignment
+
+Access the folder again:
+
+```
+\\DC-1\accounting
+```
 
 <img src="https://i.postimg.cc/HnG1yG7H/09-client1-accounting-access-before-and-after-group.png" width="500">
 
-Access granted.
-
----
-
-# Skills Demonstrated
-
-- Share-level permission configuration
-- NTFS permission alignment
-- Role-based access control (RBAC)
-- Security group management
-- Client-side access validation
-- Domain authentication behavior
-
----
-
-# Result
-
-Successfully implemented structured file share permissions and validated group-based access control in an Active Directory environment.
-
-Demonstrated practical understanding of enterprise file share security management.
+Access is now granted, confirming that permissions are controlled through group membership.
